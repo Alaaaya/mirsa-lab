@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory(prefix="mirsa-lab-") as temp:
  askpass.write_text('#!/bin/sh\ncase "$1" in *Username*) echo x-access-token;; *) printf "%s\\n" "$GH_TOKEN";; esac\n')
  askpass.chmod(0o700)
  pushenv=dict(env,GIT_ASKPASS=str(askpass),GIT_TERMINAL_PROMPT="0")
- subprocess.run(["git","-C",temp,"-c","credential.helper=","push","https://github.com/"+REPO+".git","HEAD:refs/heads/"+branch],env=pushenv,check=True)
+ subprocess.run(["git","-C",temp,"-c","http.https://github.com.proxy=","-c","credential.helper=","push","https://github.com/"+REPO+".git","HEAD:refs/heads/"+branch],env=pushenv,check=True)
  gh("workflow","run","lab.yml","-R",REPO,"--ref","main","-f","job_ref="+sha)
  # Polling is internal to this synchronous CLI, bounded, resumable via run URL.
  runid=None
