@@ -1,0 +1,7 @@
+{
+  "open": "tweak.menu",
+  "panel": "tweak.panel",
+  "close": "tweak.close",
+  "gesture": "visible.video",
+  "gestureValue": "gesture.ok"
+}
