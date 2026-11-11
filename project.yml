@@ -1,0 +1,32 @@
+name: MirsaLab
+options:
+  bundleIdPrefix: dev.mirsa.lab
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    CODE_SIGNING_ALLOWED: "NO"
+    GENERATE_INFOPLIST_FILE: "YES"
+targets:
+  LabHost:
+    type: application
+    platform: iOS
+    sources: [Host]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.mirsa.lab.host
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+  LabUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: LabHost
+schemes:
+  Lab:
+    build:
+      targets:
+        LabHost: all
+        LabUITests: [test]
+    test:
+      targets: [LabUITests]

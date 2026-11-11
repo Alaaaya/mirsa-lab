@@ -1,0 +1,4 @@
+build/
+out/
+*.xcodeproj/
+__pycache__/

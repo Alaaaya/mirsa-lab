@@ -1,0 +1,40 @@
+name: Mirsa simulator lab
+run-name: Lab ${{ inputs.job_ref }}
+on:
+  workflow_dispatch:
+    inputs:
+      job_ref:
+        description: Immutable job commit SHA in this public repository
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  simulator:
+    runs-on: macos-14
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate job commit
+        env:
+          JOB_REF: ${{ inputs.job_ref }}
+        run: |
+          [[ "$JOB_REF" =~ ^[0-9a-f]{40}$ ]] || exit 1
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.job_ref }}
+          path: input
+          persist-credentials: false
+      - name: Install project generator
+        run: command -v xcodegen || brew install xcodegen
+      - name: Compile and exercise tweak
+        run: python3 scripts/run.py input/job
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab-results
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
