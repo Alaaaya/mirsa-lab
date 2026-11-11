@@ -13,7 +13,7 @@ env["GH_TOKEN"]=os.environ.get("GH_TOKEN") or (pathlib.Path.home()/".gh_token").
 def gh(*args): return subprocess.check_output(["gh",*args],env=env,text=True).strip()
 with tempfile.TemporaryDirectory(prefix="mirsa-lab-") as temp:
  subprocess.run(["git","init","-b","mirsa/job-"+str(time.time_ns()),temp],check=True,stdout=subprocess.DEVNULL)
- shutil.copytree(job,pathlib.Path(temp)/"job")
+ shutil.copytree(job,pathlib.Path(temp)/"job",ignore=shutil.ignore_patterns("lab-output","lab-run.json",".git","__pycache__"))
  def git(*a): return subprocess.check_output(["git","-C",temp,*a],text=True).strip()
  git("config","user.name","Mirsa"); git("config","user.email","noreply")
  git("add","job"); git("commit","-m","Lab input")

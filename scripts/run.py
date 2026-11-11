@@ -26,7 +26,7 @@ try:
   shutil.copy2(job/"tweak.dylib",dylib)
   run(["xcrun","vtool","-show-build",str(dylib)],"binary-platform")
   if "IOSSIMULATOR" not in (OUT/"binary-platform.log").read_text(): raise ValueError("dylib is not an iOS simulator binary")
- run(["lipo","-verify_arch",arch,str(dylib)],"architecture")
+ run(["lipo",str(dylib),"-verify_arch",arch],"architecture")
  # Test resources are constants, not executable test code supplied by the job.
  checks=json.loads((job/"checks.json").read_text())
  required={"open","panel","close","gesture","gestureValue"}
