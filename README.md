@@ -23,3 +23,13 @@ Artifact lab-results includes result.json, compiler/build/UI logs, Lab.xcresult,
 Encrypted App Store apps such as TikTok cannot run here. Even unencrypted iPhone IPAs use device binaries and do not run in an iOS simulator. Supply authorized simulator app sources. This lab does not decrypt or download apps.
 
 The report is evidence from potentially untrusted native execution, not a security attestation. Verify against protected workflow logs before relying on it. No production delivery/thread is changed.
+
+## Android APK jobs
+
+The same CLI detects exactly one root-level *.apk and dispatches android.yml on Ubuntu with required KVM and reactivecircus/android-emulator-runner. The iOS path is unchanged. APK jobs need job.json with publicUploadApproved:true; package and launch activity are read from the APK. API 29 x86_64 is currently fixed. ARM-only native APKs, split APK sets and apps requiring a newer API fail rather than silently pass.
+
+The runner installs and launches the APK, checks its process and foreground activity, captures PNG screenshots and UI hierarchy XML, and checks fresh logcat crash/ANR evidence. This is an emulator smoke test, not an instrumentation suite or a complete feature guarantee. Network is not blocked. No production credentials are passed. Public upload approval also covers the APK and its redistribution rights.
+
+Optional job.json steps are a list with actions such as {"action":"tap","x":100,"y":200}, {"action":"tapText","text":"Open menu"}, {"action":"assert","text":"Menu is open"}, {"action":"dump"} or {"action":"wait","seconds":2}. TapText resolves actual visible element bounds from UIAutomator. Exact text/content-description assertions fail when absent. Actions are allowlisted data, never shell commands; at most 40 steps. UI dump is always captured even with no custom steps.
+
+Artifacts retain install/launch logs, complete logcat, crash buffer, foreground diagnostics, screenshots, UI dumps and result.json. Setup failure has a default fail JSON too. The self-contained Java sample under sample/android has no dependencies or permissions. Run build.sh with Android SDK build-tools 35 and platform 36 to make its debug-signed sample APK. Its debug keystore must never be used for real app distribution.

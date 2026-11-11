@@ -8,6 +8,9 @@ if cfg.get("publicUploadApproved") is not True:
  sys.exit("Refusing public upload. Review source for secrets, then set publicUploadApproved:true in job.json.")
 if any(p.is_symlink() for p in job.rglob("*")): sys.exit("Symlinks forbidden")
 if sum(p.stat().st_size for p in job.rglob("*") if p.is_file())>20*1024*1024: sys.exit("Job exceeds 20 MiB")
+apks=list(job.glob("*.apk"))
+if len(apks)>1: sys.exit("Exactly one APK supported")
+workflow="android.yml" if apks else "lab.yml"
 env=dict(os.environ)
 env["GH_TOKEN"]=os.environ.get("GH_TOKEN") or (pathlib.Path.home()/".gh_token").read_text().strip()
 def gh(*args): return subprocess.check_output(["gh",*args],env=env,text=True).strip()
@@ -24,11 +27,11 @@ with tempfile.TemporaryDirectory(prefix="mirsa-lab-") as temp:
  askpass.chmod(0o700)
  pushenv=dict(env,GIT_ASKPASS=str(askpass),GIT_TERMINAL_PROMPT="0")
  subprocess.run(["git","-C",temp,"-c","http.https://github.com.proxy=","-c","credential.helper=","push","https://github.com/"+REPO+".git","HEAD:refs/heads/"+branch],env=pushenv,check=True)
- gh("workflow","run","lab.yml","-R",REPO,"--ref","main","-f","job_ref="+sha)
+ gh("workflow","run",workflow,"-R",REPO,"--ref","main","-f","job_ref="+sha)
  # Polling is internal to this synchronous CLI, bounded, resumable via run URL.
  runid=None
  for _ in range(24):
-  runs=json.loads(gh("run","list","-R",REPO,"--workflow","lab.yml","--limit","30","--json","databaseId,displayTitle"))
+  runs=json.loads(gh("run","list","-R",REPO,"--workflow",workflow,"--limit","30","--json","databaseId,displayTitle"))
   matches=[r for r in runs if sha in r["displayTitle"]]
   if matches: runid=str(matches[0]["databaseId"]); break
   time.sleep(5)
@@ -36,7 +39,7 @@ with tempfile.TemporaryDirectory(prefix="mirsa-lab-") as temp:
  (job/"lab-run.json").write_text(json.dumps({"sha":sha,"run":runid,"url":"https://github.com/"+REPO+"/actions/runs/"+runid}))
  print("https://github.com/"+REPO+"/actions/runs/"+runid,flush=True)
  watch=subprocess.run(["gh","run","watch",runid,"-R",REPO,"--exit-status","--interval","20"],env=env,timeout=2400)
- output=job/"lab-output"; output.mkdir(exist_ok=True)
+ output=job/"lab-output"; shutil.rmtree(output,ignore_errors=True); output.mkdir()
  gh("run","download",runid,"-R",REPO,"-n","lab-results","-D",str(output))
  result=json.loads((output/"result.json").read_text())
  print(json.dumps(result,indent=2))
